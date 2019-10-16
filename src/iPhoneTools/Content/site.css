@@ -1,0 +1,79 @@
+﻿.commentArea {
+    font: 14px Arial;
+}
+
+#menu ul {
+    margin: 0px;
+    padding: 0px;
+    width: 185px;
+    list-style-type: none;
+}
+
+#menu li {
+    list-style: none;
+}
+
+#menu a {
+    display: block;
+    width: 8em;
+    color: white;
+    background-color: #000099;
+    text-decoration: none;
+    text-align: center;
+}
+
+    #menu a:hover {
+        background-color: #6666AA;
+    }
+
+.messageInfo {
+    padding: 0px 0px 5px 0px;
+    font-size: 10px;
+    color: grey;
+    text-align: center;
+    clear: both;
+    position: relative;
+}
+
+.bubbleLeft, .bubbleRight {
+    margin-bottom: 20px;
+    padding: 5px 9px;
+    max-width: 50%;
+    clear: both;
+    position: relative;
+}
+
+.bubbleLeft {
+    float: left;
+    margin-right: auto;
+    border-radius: 8px 8px 8px 0px;
+    background-color: gainsboro;
+    color: black;
+}
+
+    .bubbleLeft:before {
+        border-bottom: 10px solid gainsboro;
+        border-left: 9px solid rgba(0, 0, 0, 0);
+        position: absolute;
+        bottom: 0;
+        left: -8px;
+        content: "";
+    }
+
+.bubbleRight {
+    float: right;
+    margin-left: auto;
+    text-align: right;
+    border-radius: 8px 8px 0px 8px;
+    background-color: dodgerblue;
+    color: white;
+}
+
+    .bubbleRight:before {
+        border-bottom: 9px solid dodgerblue;
+        border-right: 9px solid rgba(0, 0, 0, 0);
+        position: absolute;
+        bottom: 0;
+        right: -8px;
+        content: "";
+    }

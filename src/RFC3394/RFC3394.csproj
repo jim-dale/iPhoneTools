@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Jay Miller</Authors>
+    <Company>Public Domain</Company>
+    <Product>RFC3394 Implementation</Product>
+    <Description>AES key wrap algorithm from RFC3394</Description>
+  </PropertyGroup>
+
+</Project>
