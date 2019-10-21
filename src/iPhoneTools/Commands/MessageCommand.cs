@@ -22,13 +22,13 @@ namespace iPhoneTools
             _logger.LogInformation("Starting {Command}", nameof(MessageCommand));
 
             var appContext = _appContext
-                .SetBackupMetadataInputPaths(opts.Input)
+                .SetBackupMetadataInputPaths(opts.InputFolder)
                 .LoadBackupMetadata()
                 .SetVersionsFromMetadata()
-                .SetManifestEntriesFileInputPath(opts.Input)
+                .SetManifestEntriesFileInputPath(opts.InputFolder)
                 .AddManifestEntries();
 
-            var backupFileProvider = new BackupFileProvider(opts.Input, appContext.ManifestVersion.Major);
+            var backupFileProvider = new BackupFileProvider(opts.InputFolder, appContext.ManifestVersion.Major);
 
             var input = backupFileProvider.GetPath("3d0d7e5fb2ce288813306e4d4636395e047a3d28");
 
@@ -39,9 +39,9 @@ namespace iPhoneTools
 
                 if (items.Any())
                 {
-                    HtmlGenerator.SaveCss(opts.Output, "bootstrap.min.css");
-                    HtmlGenerator.SaveCss(opts.Output, "bootstrap-theme.min.css");
-                    HtmlGenerator.SaveCss(opts.Output, "site.css");
+                    HtmlGenerator.SaveCss(opts.OutputFolder, "bootstrap.min.css");
+                    HtmlGenerator.SaveCss(opts.OutputFolder, "bootstrap-theme.min.css");
+                    HtmlGenerator.SaveCss(opts.OutputFolder, "site.css");
 
                     foreach (var item in items)
                     {
@@ -61,7 +61,7 @@ namespace iPhoneTools
 
                                     var inputPath = backupFileProvider.GetPath(hash);
 
-                                    HtmlGenerator.SaveAttachmentAs(inputPath, opts.Output, attachment.TransferName);
+                                    HtmlGenerator.SaveAttachmentAs(inputPath, opts.OutputFolder, attachment.TransferName);
                                 }
                             }
                         }
@@ -69,10 +69,10 @@ namespace iPhoneTools
 
                     var generator = new HtmlGenerator("Message Index", () =>
                     {
-                        return ProcessMessagesByChatIdentifier(items, opts.Output);
+                        return ProcessMessagesByChatIdentifier(items, opts.OutputFolder);
                     });
 
-                    generator.SaveAs(opts.Output, "index.html");
+                    generator.SaveAs(opts.OutputFolder, "index.html");
                 }
             }
 

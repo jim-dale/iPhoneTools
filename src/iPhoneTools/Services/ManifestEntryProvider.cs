@@ -17,7 +17,7 @@ namespace iPhoneTools
         {
             _path = path;
             _isEncryptedBackup = isEncryptedBackup;
-            _getItems = GetMbdbFiles;
+            _getItems = GetMbdbFileEntries;
 
             return this;
         }
@@ -26,7 +26,7 @@ namespace iPhoneTools
         {
             _path = path;
             _isEncryptedBackup = isEncryptedBackup;
-            _getItems = GetManifestDbFiles;
+            _getItems = GetManifestDbFileEntries;
 
             return this;
         }
@@ -40,36 +40,22 @@ namespace iPhoneTools
             }
         }
 
-        private IEnumerable<ManifestEntry> GetMbdbFiles()
+        private IEnumerable<ManifestEntry> GetMbdbFileEntries()
         {
             var manifest = new MbdbReader()
                 .LoadFrom(_path);
 
             foreach (var item in manifest.Items)
             {
-                var entryType = CommonHelpers.GetManifestEntryTypeFromMode(item.Mode);
-                if (entryType == ManifestEntryType.File)
+                var result = item.ConvertToManifestEntry(ManifestEntryType.File, _isEncryptedBackup);
+                if (result != null)
                 {
-                    var result = new ManifestEntry
-                    {
-                        FileId = item.GetSha1HashAsHexString(),
-                        Domain = item.Domain,
-                        RelativePath = item.RelativePath,
-                        FileType = entryType,
-                    };
-
-                    if (_isEncryptedBackup)
-                    {
-                        result.ProtectionClass = (ProtectionClass)item.Flags;
-                        result.WrappedKey = item.WrappedKey;
-                    }
-
                     yield return result;
                 }
             }
         }
 
-        private IEnumerable<ManifestEntry> GetManifestDbFiles()
+        private IEnumerable<ManifestEntry> GetManifestDbFileEntries()
         {
             using (var repository = new ManifestRepository(SqliteRepository.GetConnectionString(_path)))
             {
@@ -77,37 +63,10 @@ namespace iPhoneTools
 
                 foreach (var item in items)
                 {
-                    var propertyList = new BinaryPropertyListReader()
-                        .LoadFrom(item.Properties);
-
-                    if (propertyList != null && propertyList is IReadOnlyDictionary<string, object>)
+                    var result = item.ConvertToManifestEntry(ManifestEntryType.File, _isEncryptedBackup);
+                    if (result != null)
                     {
-                        dynamic properties = propertyList;
-
-                        var mode = (int)properties["$objects"][1]["Mode"];
-                        var entryType = CommonHelpers.GetManifestEntryTypeFromMode(mode);
-                        if (entryType == ManifestEntryType.File)
-                        {
-                            var result = new ManifestEntry
-                            {
-                                FileId = item.FileID,
-                                Domain = item.Domain,
-                                RelativePath = item.RelativePath,
-                                FileType = entryType,
-                            };
-
-                            if (_isEncryptedBackup)
-                            {
-                                var protectionClass = (ProtectionClass)properties["$objects"][1]["ProtectionClass"];
-                                var index = (int)properties["$objects"][1]["EncryptionKey"];
-                                var data = (byte[])properties["$objects"][index]["NS.data"];
-
-                                result.ProtectionClass = protectionClass;
-                                result.WrappedKey = WrappedKeyReader.Read(data);
-                            }
-
-                            yield return result;
-                        }
+                        yield return result;
                     }
                 }
             }

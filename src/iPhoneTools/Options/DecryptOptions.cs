@@ -6,10 +6,10 @@ namespace iPhoneTools
     public class DecryptOptions : CommonOptions
     {
         [Option('i', "input", Required = true, HelpText = "Input folder containing the encrypted iPhone backup")]
-        public string Input { get; set; }
+        public string InputFolder { get; set; }
 
         [Option('o', "output", Required = true, HelpText = "Output folder for decrypted files")]
-        public string Output { get; set; }
+        public string OutputFolder { get; set; }
 
         [Option('p', "password", Required = true, HelpText = "Password for the iPhone backup")]
         public string Password { get; set; }

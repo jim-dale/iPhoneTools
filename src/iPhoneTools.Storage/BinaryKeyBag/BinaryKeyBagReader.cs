@@ -43,6 +43,11 @@ namespace iPhoneTools
 
         public static KeyBag Read(byte[] data)
         {
+            if (data is null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
             KeyBag result = default;
 
             var state = ReaderState.Invalid;

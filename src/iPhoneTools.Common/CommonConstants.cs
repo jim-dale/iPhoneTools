@@ -12,5 +12,6 @@ namespace iPhoneTools
 
         // Dictionary keys
         public const string BackupKeyBagTag = "BackupKeyBag";
+        public const string ManifestKeyTag = "ManifestKey";
     }
 }

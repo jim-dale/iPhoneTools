@@ -1,65 +1,11 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
 
 namespace iPhoneTools
 {
     public static class KeyBagExtensions
     {
-        public static IReadOnlyDictionary<ProtectionClass, byte[]> UnwrapClassKeys_v1(this KeyBag item, string password)
-        {
-            Dictionary<ProtectionClass, byte[]> result = default;
-
-            using (var generator = new Rfc2898DeriveBytes(password, item.Salt, item.Iterations, HashAlgorithmName.SHA1))
-            {
-                var kek = generator.GetBytes(32);
-
-                result = item.UnwrapClassKeys(kek);
-            }
-
-            return result;
-        }
-
-        public static IReadOnlyDictionary<ProtectionClass, byte[]> UnwrapClassKeys_v2(this KeyBag item, string password)
-        {
-            Dictionary<ProtectionClass, byte[]> result = default;
-
-            if (item.DataProtection != null)
-            {
-                using (var gen1 = new Rfc2898DeriveBytes(password, item.DataProtection.Dpsl, item.DataProtection.Dpic, HashAlgorithmName.SHA256))
-                {
-                    var derivedPasscode = gen1.GetBytes(32);
-
-                    using (var gen2 = new Rfc2898DeriveBytes(derivedPasscode, item.Salt, item.Iterations, HashAlgorithmName.SHA1))
-                    {
-                        var kek = gen2.GetBytes(32);
-
-                        result = item.UnwrapClassKeys(kek);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        public static Dictionary<ProtectionClass, byte[]> UnwrapClassKeys(this KeyBag item, byte[] kek)
-        {
-            var result = new Dictionary<ProtectionClass, byte[]>();
-
-            foreach (var entry in item.WrappedKeys)
-            {
-                var classKey = entry.UnwrapClassKey(kek);
-                if (classKey != default)
-                {
-                    result.Add(entry.ProtectionClass, classKey);
-                }
-            }
-
-            return result;
-        }
-
         public static void SetValue(this KeyBag item, string blockIdentifier, ReadOnlySpan<byte> value)
         {
             switch (blockIdentifier)

@@ -77,6 +77,55 @@ namespace iPhoneTools
             return result;
         }
 
+        public static AppContext SetVersionsFromMetadata(this AppContext result)
+        {
+            result.ITunesVersion = Version.Parse(result.InfoProperties.ITunesVersion);
+            result.ProductVersion = Version.Parse(result.InfoProperties.ProductVersion);
+            result.StatusVersion = Version.Parse(result.StatusProperties.Version);
+            result.ManifestVersion = Version.Parse(result.ManifestProperties.Version);
+
+            result.Logger.LogInformation("iTunes Version={ITunesVersion}", result.ITunesVersion);
+            result.Logger.LogInformation("Product Version={ProductVersion}", result.ProductVersion);
+            result.Logger.LogInformation("Status Version={StatusVersion}", result.StatusVersion);
+            result.Logger.LogInformation("Manifest Version={ManifestVersion}", result.ManifestVersion);
+
+            return result;
+        }
+
+        public static AppContext SetClassKeysFromManifestKeyBag(this AppContext result, string password)
+        {
+            if (result.ManifestProperties.IsEncrypted)
+            {
+                if (result.ManifestPropertyList.TryGetValue(CommonConstants.BackupKeyBagTag, out object data))
+                {
+                    if (data != null && data is byte[] keyBagData)
+                    {
+                        var keyBag = BinaryKeyBagReader.Read(keyBagData);
+
+                        result.KeyStore.UnwrapClassKeysFromKeyBag(keyBag, password);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public static AppContext SetManifestKey(this AppContext result)
+        {
+            if (result.ManifestProperties.IsEncrypted)
+            {
+                if (result.ManifestPropertyList.TryGetValue(CommonConstants.ManifestKeyTag, out object data))
+                {
+                    if (data != null && data is byte[] wrappedKeyData)
+                    {
+                        result.KeyStore.SetManifestKey(wrappedKeyData);
+                    }
+                }
+            }
+
+            return result;
+        }
+
         public static AppContext SetManifestEntriesFileInputPath(this AppContext result, string inputPath)
         {
             if (result.ManifestVersion.Major == 9)
@@ -99,7 +148,7 @@ namespace iPhoneTools
 
         public static AppContext CopyManifestEntriesFileToOutputAsPlainText(this AppContext result, string outputPath, bool overwrite)
         {
-            if (result.ManifestVersion.Major == 9)
+            if (result.ManifestVersion.Major <= 9)
             {
                 var input = result.ManifestEntriesPath;
                 var output = Path.Combine(outputPath, CommonConstants.ManifestFileName_v9);
@@ -116,10 +165,8 @@ namespace iPhoneTools
 
                 if (result.ManifestProperties.IsEncrypted)
                 {
-                    var manifestKey = result.UnwrapManifestKey();
-
                     result.Logger.LogInformation("Decrypting {InputPath} to {OutputPath}", input, output);
-                    Encryption.DecryptFile(input, output, manifestKey, overwrite);
+                    result.KeyStore.DecryptManifestFile(input, output, overwrite);
                 }
                 else
                 {
@@ -156,96 +203,30 @@ namespace iPhoneTools
 
                 foreach (var entry in result.ManifestEntries)
                 {
-                    if (result.ManifestVersion.Major == 9)
+                    if (result.ManifestVersion.Major <= 9)
                     {
-                        inputPath = Path.Combine(input, entry.FileId);
+                        inputPath = Path.Combine(input, entry.Id);
                         outputFolder = output;
-                        outputPath = Path.Combine(outputFolder, entry.FileId);
+                        outputPath = Path.Combine(outputFolder, entry.Id);
                     }
                     else if (result.ManifestVersion.Major == 10)
                     {
-                        inputPath = Path.Combine(input, entry.FileId.Substring(0, 2), entry.FileId);
-                        outputFolder = Path.Combine(output, entry.FileId.Substring(0, 2));
-                        outputPath = Path.Combine(outputFolder, entry.FileId);
+                        inputPath = Path.Combine(input, entry.Id.Substring(0, 2), entry.Id);
+                        outputFolder = Path.Combine(output, entry.Id.Substring(0, 2));
+                        outputPath = Path.Combine(outputFolder, entry.Id);
                     }
 
                     Directory.CreateDirectory(outputFolder);
 
                     if (result.ManifestProperties.IsEncrypted)
                     {
-                        var key = entry.UnwrapEncryptionKey(result.ClassKeys);
-
                         result.Logger.LogInformation("Decrypting {InputPath} to {OutputPath}", inputPath, outputPath);
-                        Encryption.DecryptFile(inputPath, outputPath, key, overwrite);
+                        result.KeyStore.DecryptFile(inputPath, outputPath, entry.WrappedKey, entry.ProtectionClass, overwrite);
                     }
                     else
                     {
                         result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", inputPath, outputPath);
                         File.Copy(inputPath, outputPath, overwrite);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        public static AppContext SetVersionsFromMetadata(this AppContext result)
-        {
-            result.ITunesVersion = Version.Parse(result.InfoProperties.ITunesVersion);
-            result.ProductVersion = Version.Parse(result.InfoProperties.ProductVersion);
-            result.StatusVersion = Version.Parse(result.StatusProperties.Version);
-            result.ManifestVersion = Version.Parse(result.ManifestProperties.Version);
-
-            result.Logger.LogInformation("iTunes Version={ITunesVersion}", result.ITunesVersion);
-            result.Logger.LogInformation("Product Version={ProductVersion}", result.ProductVersion);
-            result.Logger.LogInformation("Status Version={StatusVersion}", result.StatusVersion);
-            result.Logger.LogInformation("Manifest Version={ManifestVersion}", result.ManifestVersion);
-
-            return result;
-        }
-
-        public static AppContext UnwrapClassKeysFromManifestKeyBag(this AppContext result, string password)
-        {
-            if (result.ManifestPropertyList.TryGetValue(CommonConstants.BackupKeyBagTag, out object data))
-            {
-                if (data != null)
-                {
-                    var keyBag = BinaryKeyBagReader.Read((byte[])data);
-
-                    if (result.ManifestProperties.IsEncrypted && keyBag != null)
-                    {
-                        result.Logger.LogInformation("Unwrapping class keys");
-
-                        if (keyBag.DataProtection is null)
-                        {
-                            result.ClassKeys = keyBag.UnwrapClassKeys_v1(password);
-                        }
-                        else
-                        {
-                            result.ClassKeys = keyBag.UnwrapClassKeys_v2(password);
-                        }
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        public static byte[] UnwrapManifestKey(this AppContext item)
-        {
-            byte[] result = default;
-
-            if (item.ManifestProperties.IsEncrypted)
-            {
-                if (item.ManifestPropertyList.TryGetValue("ManifestKey", out object data))
-                {
-                    if (data != null && data is byte[] keyData)
-                    {
-                        var wrappedManifestKey = WrappedKeyReader.Read(keyData);
-                        if (wrappedManifestKey != null)
-                        {
-                            result = wrappedManifestKey.UnwrapKey(item.ClassKeys);
-                        }
                     }
                 }
             }

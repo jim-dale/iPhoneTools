@@ -20,20 +20,21 @@ namespace iPhoneTools
         {
             _logger.LogInformation("Starting {Command}", nameof(DecryptCommand));
 
-            Directory.CreateDirectory(opts.Output);
+            Directory.CreateDirectory(opts.OutputFolder);
 
             _ = _appContext
-                .SetBackupMetadataInputPaths(opts.Input)
-                .CopyInfoPropertyListFileToOutput(opts.Output, opts.Overwrite)
-                .CopyStatusPropertyListFileToOutput(opts.Output, opts.Overwrite)
-                .CopyManifestPropertyListFileToOutput(opts.Output, opts.Overwrite)
+                .SetBackupMetadataInputPaths(opts.InputFolder)
+                .CopyInfoPropertyListFileToOutput(opts.OutputFolder, opts.Overwrite)
+                .CopyStatusPropertyListFileToOutput(opts.OutputFolder, opts.Overwrite)
+                .CopyManifestPropertyListFileToOutput(opts.OutputFolder, opts.Overwrite)
                 .LoadBackupMetadata()
-                .UnwrapClassKeysFromManifestKeyBag(opts.Password)
                 .SetVersionsFromMetadata()
-                .SetManifestEntriesFileInputPath(opts.Input)
-                .CopyManifestEntriesFileToOutputAsPlainText(opts.Output, opts.Overwrite)
+                .SetClassKeysFromManifestKeyBag(opts.Password)
+                .SetManifestKey()
+                .SetManifestEntriesFileInputPath(opts.InputFolder)
+                .CopyManifestEntriesFileToOutputAsPlainText(opts.OutputFolder, opts.Overwrite)
                 .AddManifestEntries()
-                .CopyManifestEntryFilesToOutputAsPlainText(opts.Input, opts.Output, opts.Overwrite);
+                .CopyManifestEntryFilesToOutputAsPlainText(opts.InputFolder, opts.OutputFolder, opts.Overwrite);
 
             _logger.LogInformation("Completed {Command}", nameof(DecryptCommand));
 

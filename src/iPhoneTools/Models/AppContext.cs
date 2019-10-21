@@ -7,6 +7,7 @@ namespace iPhoneTools
     public class AppContext
     {
         internal ILogger<AppContext> Logger { get; }
+        internal KeyStore KeyStore { get; }
 
         public string InfoPropertiesPath { get; set; }
         public IReadOnlyDictionary<string,object> InfoPropertyList { get; internal set; }
@@ -27,12 +28,12 @@ namespace iPhoneTools
         public Version StatusVersion { get; internal set; }
         public Version ManifestVersion { get; internal set; }
 
-        public IReadOnlyDictionary<ProtectionClass, byte[]> ClassKeys { get; internal set; }
         public IReadOnlyList<ManifestEntry> ManifestEntries { get; internal set; }
 
-        public AppContext(ILogger<AppContext> logger)
+        public AppContext(ILogger<AppContext> logger, KeyStore keyStore)
         {
             Logger = logger;
+            KeyStore = keyStore;
         }
     }
 }
