@@ -30,6 +30,15 @@ namespace iPhoneTools
             return ParseElement(dict);
         }
 
+        public object Parse(string text)
+        {
+            _doc = XDocument.Parse(text);
+
+            var dict = _doc.Element(PListTag).Element(DictionaryTag);
+
+            return ParseElement(dict);
+        }
+
         private object ParseElement(XElement item)
         {
             var name = item.Name.LocalName.ToLowerInvariant();

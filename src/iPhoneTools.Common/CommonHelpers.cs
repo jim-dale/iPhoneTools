@@ -30,7 +30,7 @@ namespace iPhoneTools
         {
             ManifestEntryType result;
 
-            mode = mode & 0xE000;
+            mode &= 0xE000;
             switch (mode)
             {
                 case 0xA000:
@@ -50,7 +50,7 @@ namespace iPhoneTools
             return result;
         }
 
-        public static string GetManifestEntryModeAsString(int mode)
+        public static string GetFileModeAsString(int mode)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -61,15 +61,15 @@ namespace iPhoneTools
             return builder.ToString();
         }
 
-        public static string GetManifestEntryMode(int mode)
+        public static string GetFileModesAsString(int mode)
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append(GetManifestEntryModeAsString(mode >> 6));
+            builder.Append(GetFileModeAsString(mode >> 6));
             builder.Append(' ');
-            builder.Append(GetManifestEntryModeAsString(mode >> 3));
+            builder.Append(GetFileModeAsString(mode >> 3));
             builder.Append(' ');
-            builder.Append(GetManifestEntryModeAsString(mode));
+            builder.Append(GetFileModeAsString(mode));
 
             return builder.ToString();
         }
