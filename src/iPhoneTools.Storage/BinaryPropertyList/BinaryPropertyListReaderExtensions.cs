@@ -1,9 +1,23 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace iPhoneTools
 {
     public static class BinaryPropertyListReaderExtensions
     {
+        public static IReadOnlyDictionary<string, object> LoadReadOnlyDictionaryFrom(this BinaryPropertyListReader item, string path)
+        {
+            var obj = item.LoadFrom(path);
+
+            var result = obj as Dictionary<string, object>;
+            if (obj is null)
+            {
+                throw new InvalidDataException();
+            }
+
+            return result;
+        }
+
         public static object LoadFrom(this BinaryPropertyListReader item, string path)
         {
             object result = default;

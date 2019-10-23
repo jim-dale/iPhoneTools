@@ -1,21 +1,14 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace iPhoneTools
 {
     public static partial class AppContextExtensions
     {
-        public static AppContext AddInfoPropertyListFile(this AppContext result, string path, bool optional = false)
+        public static AppContext AddInfoPropertyListFile(this AppContext result, string path)
         {
-            return AddFromFile(result, path, optional, (context) =>
-            {
-                var reader = new XmlPropertyListReader();
+            result.InfoPropertyList = new XmlPropertyListReader()
+                .LoadReadOnlyDictionaryFrom(path);
 
-                var obj = reader.LoadFrom(path);
-                if (obj is Dictionary<string, object> root)
-                {
-                    result.InfoPropertyList = root;
-                }
-            });
+            return result;
         }
 
         public static AppContext AddInfoProperties(this AppContext result)

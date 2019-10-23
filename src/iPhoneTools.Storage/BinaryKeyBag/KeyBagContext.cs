@@ -1,7 +1,7 @@
 ﻿
 namespace iPhoneTools
 {
-    public class KeyBagContext
+    internal class KeyBagContext
     {
         public byte[] Data { get; set; }
         public int Length { get; set; }

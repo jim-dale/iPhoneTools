@@ -7,71 +7,71 @@ namespace iPhoneTools
 {
     public static partial class AppContextExtensions
     {
-        public static AppContext SetBackupMetadataInputPaths(this AppContext result, string inputPath)
+        public static AppContext SetBackupMetadataInputPaths(this AppContext result, string inputFolder)
         {
-            result.InfoPropertiesPath = Path.Combine(inputPath, CommonConstants.InfoFileName);
-            result.Logger.LogInformation("{InfoFileName} input path set to {InfoPropertiesPath}", CommonConstants.InfoFileName, result.InfoPropertiesPath);
+            result.InfoPropertiesFile = Path.Combine(inputFolder, CommonConstants.InfoFileName);
+            result.Logger.LogInformation("{InfoFileName} input file path set to {InfoPropertiesFile}", CommonConstants.InfoFileName, result.InfoPropertiesFile);
 
-            result.StatusPropertiesPath = Path.Combine(inputPath, CommonConstants.StatusFileName);
-            result.Logger.LogInformation("{StatusFileName} input path set to {StatusPropertiesPath}", CommonConstants.StatusFileName, result.StatusPropertiesPath);
+            result.StatusPropertiesFile = Path.Combine(inputFolder, CommonConstants.StatusFileName);
+            result.Logger.LogInformation("{StatusFileName} input file path set to {StatusPropertiesFile}", CommonConstants.StatusFileName, result.StatusPropertiesFile);
 
-            result.ManifestPropertiesPath = Path.Combine(inputPath, CommonConstants.ManifestPropertiesFileName);
-            result.Logger.LogInformation("{ManifestPropertiesFileName} input path set to {ManifestPropertiesPath}", CommonConstants.ManifestPropertiesFileName, result.ManifestPropertiesPath);
+            result.ManifestPropertiesFile = Path.Combine(inputFolder, CommonConstants.ManifestPropertiesFileName);
+            result.Logger.LogInformation("{ManifestPropertiesFileName} input file path set to {ManifestPropertiesFile}", CommonConstants.ManifestPropertiesFileName, result.ManifestPropertiesFile);
 
             return result;
         }
 
-        public static AppContext CopyInfoPropertyListFileToOutput(this AppContext result, string outputPath, bool overwrite)
+        public static AppContext CopyInfoPropertyListFileToOutput(this AppContext result, string outputFolder, bool overwrite)
         {
-            var output = Path.Combine(outputPath, CommonConstants.InfoFileName);
+            var outputFile = Path.Combine(outputFolder, CommonConstants.InfoFileName);
 
-            result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", result.InfoPropertiesPath, output);
-            File.Copy(result.InfoPropertiesPath, output, overwrite);
+            result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", result.InfoPropertiesFile, outputFile);
+            File.Copy(result.InfoPropertiesFile, outputFile, overwrite);
 
-            result.InfoPropertiesPath = output;
+            result.InfoPropertiesFile = outputFile;
 
             return result;
         }
 
-        public static AppContext CopyStatusPropertyListFileToOutput(this AppContext result, string outputPath, bool overwrite)
+        public static AppContext CopyStatusPropertyListFileToOutput(this AppContext result, string outputFolder, bool overwrite)
         {
-            var output = Path.Combine(outputPath, CommonConstants.StatusFileName);
+            var outputFile = Path.Combine(outputFolder, CommonConstants.StatusFileName);
 
-            result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", result.StatusPropertiesPath, output);
-            File.Copy(result.StatusPropertiesPath, output, overwrite);
+            result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", result.StatusPropertiesFile, outputFile);
+            File.Copy(result.StatusPropertiesFile, outputFile, overwrite);
 
-            result.StatusPropertiesPath = output;
+            result.StatusPropertiesFile = outputFile;
 
             return result;
         }
 
-        public static AppContext CopyManifestPropertyListFileToOutput(this AppContext result, string outputPath, bool overwrite)
+        public static AppContext CopyManifestPropertyListFileToOutput(this AppContext result, string outputFolder, bool overwrite)
         {
-            var output = Path.Combine(outputPath, CommonConstants.ManifestPropertiesFileName);
+            var outputFile = Path.Combine(outputFolder, CommonConstants.ManifestPropertiesFileName);
 
-            result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", result.ManifestPropertiesPath, output);
-            File.Copy(result.ManifestPropertiesPath, output, overwrite);
+            result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", result.ManifestPropertiesFile, outputFile);
+            File.Copy(result.ManifestPropertiesFile, outputFile, overwrite);
 
-            result.ManifestPropertiesPath = output;
+            result.ManifestPropertiesFile = outputFile;
 
             return result;
         }
 
         public static AppContext LoadBackupMetadata(this AppContext result)
         {
-            result.Logger.LogInformation("Loading metadata from {InfoPropertiesPath}", result.InfoPropertiesPath);
+            result.Logger.LogInformation("Loading metadata from {InfoPropertiesFile}", result.InfoPropertiesFile);
             result = result
-                .AddInfoPropertyListFile(result.InfoPropertiesPath)
+                .AddInfoPropertyListFile(result.InfoPropertiesFile)
                 .AddInfoProperties();
 
-            result.Logger.LogInformation("Loading metadata from {StatusPropertiesPath}", result.StatusPropertiesPath);
+            result.Logger.LogInformation("Loading metadata from {StatusPropertiesFile}", result.StatusPropertiesFile);
             result = result
-                .AddStatusPropertyListFile(result.StatusPropertiesPath)
+                .AddStatusPropertyListFile(result.StatusPropertiesFile)
                 .AddStatusProperties();
 
-            result.Logger.LogInformation("Loading metadata from {ManifestPropertiesPath}", result.ManifestPropertiesPath);
+            result.Logger.LogInformation("Loading metadata from {ManifestPropertiesFile}", result.ManifestPropertiesFile);
             result = result
-                .AddManifestPropertyListFile(result.ManifestPropertiesPath)
+                .AddManifestPropertyListFile(result.ManifestPropertiesFile)
                 .AddManifestProperties();
 
             return result;
@@ -81,12 +81,13 @@ namespace iPhoneTools
         {
             result.ITunesVersion = Version.Parse(result.InfoProperties.ITunesVersion);
             result.ProductVersion = Version.Parse(result.InfoProperties.ProductVersion);
-            result.StatusVersion = Version.Parse(result.StatusProperties.Version);
-            result.ManifestVersion = Version.Parse(result.ManifestProperties.Version);
-
             result.Logger.LogInformation("iTunes Version={ITunesVersion}", result.ITunesVersion);
             result.Logger.LogInformation("Product Version={ProductVersion}", result.ProductVersion);
+
+            result.StatusVersion = Version.Parse(result.StatusProperties.Version);
             result.Logger.LogInformation("Status Version={StatusVersion}", result.StatusVersion);
+
+            result.ManifestVersion = Version.Parse(result.ManifestProperties.Version);
             result.Logger.LogInformation("Manifest Version={ManifestVersion}", result.ManifestVersion);
 
             return result;
@@ -126,54 +127,54 @@ namespace iPhoneTools
             return result;
         }
 
-        public static AppContext SetManifestEntriesFileInputPath(this AppContext result, string inputPath)
+        public static AppContext SetManifestEntriesFileInputPath(this AppContext result, string inputFolder)
         {
-            if (result.ManifestVersion.Major == 9)
+            if (result.ManifestVersion.Major <= 9)
             {
-                result.ManifestEntriesPath = Path.Combine(inputPath, CommonConstants.ManifestFileName_v9);
-                result.Logger.LogInformation("{ManifestFileName} input path set to {ManifestEntriesPath}", CommonConstants.ManifestFileName_v9, result.ManifestEntriesPath);
+                result.ManifestEntriesFile = Path.Combine(inputFolder, CommonConstants.ManifestFileName_v9);
+                result.Logger.LogInformation("{ManifestFileName} input file path set to {ManifestEntriesFile}", CommonConstants.ManifestFileName_v9, result.ManifestEntriesFile);
             }
             else if (result.ManifestVersion.Major == 10)
             {
-                result.ManifestEntriesPath = Path.Combine(inputPath, CommonConstants.ManifestFileName_v10);
-                result.Logger.LogInformation("{ManifestFileName} input path set to {ManifestEntriesPath}", CommonConstants.ManifestFileName_v10, result.ManifestEntriesPath);
+                result.ManifestEntriesFile = Path.Combine(inputFolder, CommonConstants.ManifestFileName_v10);
+                result.Logger.LogInformation("{ManifestFileName} input file path set to {ManifestEntriesFile}", CommonConstants.ManifestFileName_v10, result.ManifestEntriesFile);
             }
             else
             {
-                result.Logger.LogError("Manifest input path not set because the manifest version ({ManifestVersion}) is not supported", result.ManifestVersion);
+                result.Logger.LogError("Manifest input file path not set because the manifest version ({ManifestVersion}) is not supported", result.ManifestVersion);
             }
 
             return result;
         }
 
-        public static AppContext CopyManifestEntriesFileToOutputAsPlainText(this AppContext result, string outputPath, bool overwrite)
+        public static AppContext CopyManifestEntriesFileToOutputAsPlainText(this AppContext result, string outputFolder, bool overwrite)
         {
             if (result.ManifestVersion.Major <= 9)
             {
-                var input = result.ManifestEntriesPath;
-                var output = Path.Combine(outputPath, CommonConstants.ManifestFileName_v9);
+                var inputFile = result.ManifestEntriesFile;
+                var outputFile = Path.Combine(outputFolder, CommonConstants.ManifestFileName_v9);
 
-                result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", input, output);
-                File.Copy(result.ManifestEntriesPath, output, overwrite);
+                result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", inputFile, outputFile);
+                File.Copy(result.ManifestEntriesFile, outputFile, overwrite);
 
-                result.ManifestEntriesPath = output;
+                result.ManifestEntriesFile = outputFile;
             }
             else if (result.ManifestVersion.Major == 10)
             {
-                var input = result.ManifestEntriesPath;
-                var output = Path.Combine(outputPath, CommonConstants.ManifestFileName_v10);
+                var inputFile = result.ManifestEntriesFile;
+                var outputFile = Path.Combine(outputFolder, CommonConstants.ManifestFileName_v10);
 
                 if (result.ManifestProperties.IsEncrypted)
                 {
-                    result.Logger.LogInformation("Decrypting {InputPath} to {OutputPath}", input, output);
-                    result.KeyStore.DecryptManifestFile(input, output, overwrite);
+                    result.Logger.LogInformation("Decrypting {InputFile} to {OutputFile}", inputFile, outputFile);
+                    result.KeyStore.DecryptManifestFile(inputFile, outputFile, overwrite);
                 }
                 else
                 {
-                    result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", input, output);
-                    File.Copy(input, output, overwrite);
+                    result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", inputFile, outputFile);
+                    File.Copy(inputFile, outputFile, overwrite);
                 }
-                result.ManifestEntriesPath = output;
+                result.ManifestEntriesFile = outputFile;
             }
             else
             {
@@ -193,58 +194,40 @@ namespace iPhoneTools
             return result;
         }
 
-        public static AppContext CopyManifestEntryFilesToOutputAsPlainText(this AppContext result, string input, string output, bool overwrite)
+        public static AppContext CopyManifestEntryFilesToOutputAsPlainText(this AppContext result, string inputFolder, string outputFolder, bool overwrite)
         {
             if (result.ManifestVersion.Major == 9 || result.ManifestVersion.Major == 10)
             {
-                string inputPath = default;
-                string outputFolder = default;
-                string outputPath = default;
+                string inputFile = default;
+                string outputSubFolder = outputFolder;
+                string outputFile = default;
 
                 foreach (var entry in result.ManifestEntries)
                 {
                     if (result.ManifestVersion.Major <= 9)
                     {
-                        inputPath = Path.Combine(input, entry.Id);
-                        outputFolder = output;
-                        outputPath = Path.Combine(outputFolder, entry.Id);
+                        inputFile = Path.Combine(inputFolder, entry.Id);
+                        outputFile = Path.Combine(outputFolder, entry.Id);
                     }
                     else if (result.ManifestVersion.Major == 10)
                     {
-                        inputPath = Path.Combine(input, entry.Id.Substring(0, 2), entry.Id);
-                        outputFolder = Path.Combine(output, entry.Id.Substring(0, 2));
-                        outputPath = Path.Combine(outputFolder, entry.Id);
+                        inputFile = Path.Combine(inputFolder, entry.Id.Substring(0, 2), entry.Id);
+                        outputSubFolder = Path.Combine(outputFolder, entry.Id.Substring(0, 2));
+                        outputFile = Path.Combine(outputSubFolder, entry.Id);
                     }
 
-                    Directory.CreateDirectory(outputFolder);
+                    Directory.CreateDirectory(outputSubFolder);
 
                     if (result.ManifestProperties.IsEncrypted)
                     {
-                        result.Logger.LogInformation("Decrypting {InputPath} to {OutputPath}", inputPath, outputPath);
-                        result.KeyStore.DecryptFile(inputPath, outputPath, entry.WrappedKey, entry.ProtectionClass, overwrite);
+                        result.Logger.LogInformation("Decrypting {InputFile} to {OutputFile}", inputFile, outputFile);
+                        result.KeyStore.DecryptFile(inputFile, outputFile, entry.WrappedKey, entry.ProtectionClass, overwrite);
                     }
                     else
                     {
-                        result.Logger.LogInformation("Copying {InputPath} to {OutputPath}", inputPath, outputPath);
-                        File.Copy(inputPath, outputPath, overwrite);
+                        result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", inputFile, outputFile);
+                        File.Copy(inputFile, outputFile, overwrite);
                     }
-                }
-            }
-
-            return result;
-        }
-
-        private static AppContext AddFromFile(AppContext result, string path, bool optional, Action<AppContext> action)
-        {
-            if (File.Exists(path))
-            {
-                action(result);
-            }
-            else
-            {
-                if (optional == false)
-                {
-                    throw new FileNotFoundException();
                 }
             }
 
@@ -258,12 +241,12 @@ namespace iPhoneTools
             if (item.ManifestVersion.Major == 9)
             {
                 result = new ManifestEntryProvider()
-                    .FromMbdbFile(item.ManifestEntriesPath, item.ManifestProperties.IsEncrypted);
+                    .FromMbdbFile(item.ManifestEntriesFile, item.ManifestProperties.IsEncrypted);
             }
             else if (item.ManifestVersion.Major == 10)
             {
                 result = new ManifestEntryProvider()
-                    .FromManifestDbFile(item.ManifestEntriesPath, item.ManifestProperties.IsEncrypted);
+                    .FromManifestDbFile(item.ManifestEntriesFile, item.ManifestProperties.IsEncrypted);
             }
 
             return result;

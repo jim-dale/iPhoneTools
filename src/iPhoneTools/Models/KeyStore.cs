@@ -47,21 +47,22 @@ namespace iPhoneTools
                 throw new ArgumentNullException(nameof(wrappedKeyData));
             }
 
+            _logger.LogInformation("Retrieving manifest wrapped encryption key");
             _wrappedManifestKey = WrappedKeyReader.Read(wrappedKeyData);
         }
 
-        public void DecryptManifestFile(string inputPath, string outputPath, bool overwrite)
+        public void DecryptManifestFile(string inputFile, string outputFile, bool overwrite)
         {
             var key = UnwrapKey(_wrappedManifestKey, _classKeys);
 
-            DecryptFileCore(inputPath, outputPath, key, overwrite);
+            DecryptFileCore(inputFile, outputFile, key, overwrite);
         }
 
-        public void DecryptFile(string inputPath, string outputPath, WrappedKey wrappedKey, ProtectionClass protectionClass, bool overwrite)
+        public void DecryptFile(string inputFile, string outputFile, WrappedKey wrappedKey, ProtectionClass protectionClass, bool overwrite)
         {
             var key = UnwrapKey(wrappedKey, _classKeys, protectionClass);
 
-            DecryptFileCore(inputPath, outputPath, key, overwrite);
+            DecryptFileCore(inputFile, outputFile, key, overwrite);
         }
 
         private byte[] DeriveKeyEncryptionKey_v1(KeyBag item, string password)
@@ -115,7 +116,7 @@ namespace iPhoneTools
 
             if (item.Wpky != null)
             {
-                if ((item.Wrap & WrapTypes.Passcode) == WrapTypes.Passcode)
+                if ((item.Wrap & KeyWrapTypes.Passcode) == KeyWrapTypes.Passcode)
                 {
                     result = KeyWrapAlgorithm.UnwrapKey(kek, item.Wpky);
                 }
@@ -138,7 +139,7 @@ namespace iPhoneTools
             return KeyWrapAlgorithm.UnwrapKey(kek, item.Key);
         }
 
-        private void DecryptFileCore(string inputPath, string outputPath, byte[] key, bool overwrite)
+        private void DecryptFileCore(string inputFile, string outputFile, byte[] key, bool overwrite)
         {
             var fileMode = (overwrite) ? FileMode.Create : FileMode.CreateNew;
 
@@ -150,9 +151,9 @@ namespace iPhoneTools
 
                 var decryptor = alg.CreateDecryptor();
 
-                using (var inStream = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var inStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    using (var outStream = new FileStream(outputPath, fileMode))
+                    using (var outStream = new FileStream(outputFile, fileMode))
                     {
                         using (var cryptoStream = new CryptoStream(inStream, decryptor, CryptoStreamMode.Read))
                         {

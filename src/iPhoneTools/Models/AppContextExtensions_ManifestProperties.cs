@@ -1,21 +1,14 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace iPhoneTools
 {
     public static partial class AppContextExtensions
     {
-        public static AppContext AddManifestPropertyListFile(this AppContext result, string path, bool optional = false)
+        public static AppContext AddManifestPropertyListFile(this AppContext result, string path)
         {
-            return AddFromFile(result, path, optional, (context) =>
-            {
-                var reader = new BinaryPropertyListReader();
+            result.ManifestPropertyList = new BinaryPropertyListReader()
+                .LoadReadOnlyDictionaryFrom(path);
 
-                var obj = reader.LoadFrom(path);
-                if (obj is Dictionary<string, object> root)
-                {
-                    result.ManifestPropertyList = root;
-                }
-            });
+            return result;
         }
 
         public static AppContext AddManifestProperties(this AppContext result)

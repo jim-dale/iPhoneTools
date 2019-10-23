@@ -10,8 +10,8 @@ namespace iPhoneTools
     {
         public const char UnicodeObjectReplacementCharacter = (char)0xFFFC;
 
-        private string _title;
-        private Func<XElement> _getBody;
+        private readonly string _title;
+        private readonly Func<XElement> _getBody;
 
         public HtmlGenerator(string title, Func<XElement> getBody)
         {
@@ -19,7 +19,7 @@ namespace iPhoneTools
             _getBody = getBody;
         }
 
-        public void SaveAs(string folder, string fileName)
+        public void SaveAs(string outputFolder, string fileName)
         {
             var xDocument = new XDocument(
                 new XDocumentType("html", null, null, null),
@@ -46,33 +46,68 @@ namespace iPhoneTools
                 Indent = true,
             };
 
-            string path = Path.Combine(folder, fileName);
-            Directory.CreateDirectory(folder);
+            var outputFile = Path.Combine(outputFolder, fileName);
+            Directory.CreateDirectory(outputFolder);
 
-            using (var writer = XmlWriter.Create(path, settings))
+            using (var writer = XmlWriter.Create(outputFile, settings))
             {
                 xDocument.WriteTo(writer);
             }
         }
 
         #region Helper methods
-        public static void SaveAttachmentAs(string inputPath, string outputFolder, string fileName)
+        public static void SaveAttachmentAs(string inputFile, string outputFolder, string fileName)
         {
-            outputFolder = Path.Combine(outputFolder, "img");
-            var outputPath = Path.Combine(outputFolder, fileName);
+            var outputSubFolder = Path.Combine(outputFolder, "img");
+            var outputFile = Path.Combine(outputSubFolder, fileName);
 
-            Directory.CreateDirectory(outputFolder);
-            File.Copy(inputPath, outputPath, overwrite: true);
+            Directory.CreateDirectory(outputSubFolder);
+            File.Copy(inputFile, outputFile, overwrite: true);
         }
 
         public static void SaveCss(string outputFolder, string fileName)
         {
-            var inputPath = Path.Combine("Content", fileName);
-            outputFolder = Path.Combine(outputFolder, "css");
-            var outputPath = Path.Combine(outputFolder, fileName);
+            var inputFile = Path.Combine("Content", fileName);
+            var outputSubFolder = Path.Combine(outputFolder, "css");
+            var outputFile = Path.Combine(outputFolder, fileName);
 
-            Directory.CreateDirectory(outputFolder);
-            File.Copy(inputPath, outputPath, overwrite: true);
+            Directory.CreateDirectory(outputSubFolder);
+            File.Copy(inputFile, outputFile, overwrite: true);
+        }
+
+        public static XElement CreateAnchorElement(string fileName)
+        {
+            var result = new XElement("a", new XAttribute("href", "img/" + fileName), fileName);
+
+            return result;
+        }
+
+        public static XElement CreateVideoElement(string fileName, string mimeType)
+        {
+            var result = new XElement("span",
+                new XElement("video", new XAttribute("controls", true),
+                    new XElement("source", new XAttribute("src", "img/" + fileName), new XAttribute("type", mimeType))),
+                new XElement("br"));
+
+            return result;
+        }
+
+        public static XElement CreateAudioElement(string fileName, string mimeType)
+        {
+            var result = new XElement("span",
+                new XElement("audio", new XAttribute("controls", true), new XAttribute("src", "img/" + fileName)),
+                new XElement("br"));
+
+            return result;
+        }
+
+        public static XElement CreateImageElement(string fileName)
+        {
+            var result = new XElement("span",
+                new XElement("img", new XAttribute("src", "img/" + fileName), new XAttribute("width", "200")),
+                new XElement("br"));
+
+            return result;
         }
         #endregion
     }

@@ -59,9 +59,9 @@ namespace iPhoneTools
 
                                     var hash = CommonHelpers.Sha1HashAsHexString(toHash);
 
-                                    var inputPath = backupFileProvider.GetPath(hash);
+                                    var inputFile = backupFileProvider.GetPath(hash);
 
-                                    HtmlGenerator.SaveAttachmentAs(inputPath, opts.OutputFolder, attachment.TransferName);
+                                    HtmlGenerator.SaveAttachmentAs(inputFile, opts.OutputFolder, attachment.TransferName);
                                 }
                             }
                         }
@@ -182,54 +182,21 @@ namespace iPhoneTools
             XElement result;
             if (item.MimeType.StartsWith("image/"))
             {
-                result = CreateImageElement(item.TransferName);
+                result = HtmlGenerator.CreateImageElement(item.TransferName);
             }
             else if (item.MimeType.StartsWith("video/"))
             {
-                result = CreateVideoElement(item.TransferName, item.MimeType);
+                result = HtmlGenerator.CreateVideoElement(item.TransferName, item.MimeType);
             }
             else if (item.MimeType.StartsWith("audio/"))
             {
-                result = CreateAudioElement(item.TransferName, item.MimeType);
+                result = HtmlGenerator.CreateAudioElement(item.TransferName, item.MimeType);
             }
             else
             {
-                result = CreateAnchorElement(item.TransferName);
+                result = HtmlGenerator.CreateAnchorElement(item.TransferName);
             }
 
-            return result;
-        }
-
-        private XElement CreateAnchorElement(string fileName)
-        {
-            var result = new XElement("a", new XAttribute("href", "img/" + fileName), fileName);
-            return result;
-        }
-
-        private XElement CreateVideoElement(string fileName, string mimeType)
-        {
-            var result = new XElement("span",
-                new XElement("video", new XAttribute("controls", true),
-                    new XElement("source", new XAttribute("src", "img/" + fileName), new XAttribute("type", mimeType))),
-                new XElement("br"));
-
-            return result;
-        }
-
-        private XElement CreateAudioElement(string fileName, string mimeType)
-        {
-            var result = new XElement("span",
-                new XElement("audio", new XAttribute("controls", true), new XAttribute("src", "img/" + fileName)),
-                new XElement("br"));
-
-            return result;
-        }
-
-        private XElement CreateImageElement(string fileName)
-        {
-            var result = new XElement("span",
-                new XElement("img", new XAttribute("src", "img/" + fileName), new XAttribute("width", "200")),
-                new XElement("br"));
             return result;
         }
     }

@@ -5,12 +5,12 @@ namespace iPhoneTools
 {
     public class BackupFileProvider
     {
-        private string _input;
+        private string _folder;
         private Func<string, string> _func;
 
-        public BackupFileProvider(string inputPath, int version)
+        public BackupFileProvider(string folder, int version)
         {
-            _input = inputPath;
+            _folder = folder;
 
             switch (version)
             {
@@ -31,12 +31,12 @@ namespace iPhoneTools
 
         private string PreVersion10Provider(string fileName)
         {
-            return Path.Combine(_input, fileName);
+            return Path.Combine(_folder, fileName);
         }
 
         private string Version10Provider(string fileName)
         {
-            return Path.Combine(_input, fileName.Substring(0, 2), fileName);
+            return Path.Combine(_folder, fileName.Substring(0, 2), fileName);
         }
     }
 }

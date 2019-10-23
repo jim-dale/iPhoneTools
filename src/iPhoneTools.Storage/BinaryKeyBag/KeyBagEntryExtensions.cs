@@ -17,7 +17,7 @@ namespace iPhoneTools
                     item.ProtectionClass = (ProtectionClass)BinaryPrimitives.ReadInt32BigEndian(value);
                     break;
                 case KeyBagConstants.WrapTag:
-                    item.Wrap = (WrapTypes)BinaryPrimitives.ReadInt32BigEndian(value);
+                    item.Wrap = (KeyWrapTypes)BinaryPrimitives.ReadInt32BigEndian(value);
                     break;
                 case KeyBagConstants.KeyTypeTag:
                     item.KeyType = (KeyType)BinaryPrimitives.ReadInt32BigEndian(value);

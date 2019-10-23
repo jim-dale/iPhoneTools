@@ -1,21 +1,14 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace iPhoneTools
 {
     public static partial class AppContextExtensions
     {
-        public static AppContext AddStatusPropertyListFile(this AppContext result, string path, bool optional = false)
+        public static AppContext AddStatusPropertyListFile(this AppContext result, string path)
         {
-            return AddFromFile(result, path, optional, (context) =>
-            {
-                var reader = new BinaryPropertyListReader();
+            result.StatusPropertyList = new BinaryPropertyListReader()
+                .LoadReadOnlyDictionaryFrom(path);
 
-                var obj = reader.LoadFrom(path);
-                if (obj is Dictionary<string, object> root)
-                {
-                    result.StatusPropertyList = root;
-                }
-            });
+            return result;
         }
 
         public static AppContext AddStatusProperties(this AppContext result)

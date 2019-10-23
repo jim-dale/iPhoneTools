@@ -9,25 +9,24 @@ namespace iPhoneTools
         internal ILogger<AppContext> Logger { get; }
         internal KeyStore KeyStore { get; }
 
-        public string InfoPropertiesPath { get; set; }
+        public string InfoPropertiesFile { get; set; }
         public IReadOnlyDictionary<string,object> InfoPropertyList { get; internal set; }
         public BackupInfoProperties InfoProperties { get; set; }
 
-        public string StatusPropertiesPath { get; set; }
+        public string StatusPropertiesFile { get; set; }
         public IReadOnlyDictionary<string, object> StatusPropertyList { get; internal set; }
         public BackupStatusProperties StatusProperties { get; set; }
 
-        public string ManifestPropertiesPath { get; set; }
+        public string ManifestPropertiesFile { get; set; }
         public IReadOnlyDictionary<string, object> ManifestPropertyList { get; internal set; }
         public BackupManifestProperties ManifestProperties { get; internal set; }
-
-        public string ManifestEntriesPath { get; set; }
 
         public Version ITunesVersion { get; internal set; }
         public Version ProductVersion { get; internal set; }
         public Version StatusVersion { get; internal set; }
         public Version ManifestVersion { get; internal set; }
 
+        public string ManifestEntriesFile { get; set; }
         public IReadOnlyList<ManifestEntry> ManifestEntries { get; internal set; }
 
         public AppContext(ILogger<AppContext> logger, KeyStore keyStore)
