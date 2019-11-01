@@ -2,7 +2,6 @@
 using System.IO;
 
 /// <remarks>
-/// 
 /// HEADER
 /// magic number ("bplist")
 /// file format version
@@ -50,9 +49,15 @@ namespace iPhoneTools
     {
         private const int MinimumViableFileSize = 40;
 
-        internal PropertyContext LoadFrom(BinaryReader reader)
+        internal object LoadFrom(BinaryReader reader)
         {
-            PropertyContext result = default;
+            return Parse(reader).Value;
+        }
+
+
+        private PropertyContext Parse(BinaryReader reader)
+        {
+            var result = PropertyContext.Empty;
 
             if (reader.BaseStream.Length >= MinimumViableFileSize)
             {
@@ -158,8 +163,15 @@ namespace iPhoneTools
             count = ReadObjectSize(reader, count);
 
             int size = 1 << count;
-            // Don't have support 16 byte integers so treat them as binary data
-            var value = (size == 16) ? (object)reader.ReadBytes(size) : (object)reader.ReadLongBigEndian(size);
+            object value = size switch
+            {
+                1 => reader.ReadByte(),
+                2 => reader.ReadUInt16BigEndian(),
+                4 => reader.ReadUInt32BigEndian(),
+                8 => reader.ReadInt64BigEndian(),
+                16 => reader.ReadBytes(size),
+                _ => throw new InvalidDataException("Unsupported integer value size"),
+            };
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
             return new PropertyContext(position, count, totalSize, PropertyType.Integer, value);
@@ -174,7 +186,12 @@ namespace iPhoneTools
             count = ReadObjectSize(reader, count);
 
             int size = 1 << count;
-            var value = reader.ReadRealBigEndian(size);
+            object value = size switch
+            {
+                4 => reader.ReadSingleBigEndian(),
+                8 => reader.ReadDoubleBigEndian(),
+                _ => throw new InvalidDataException("Unsupported real value size"),
+            };
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
             return new PropertyContext(position, count, totalSize, PropertyType.Real, value);

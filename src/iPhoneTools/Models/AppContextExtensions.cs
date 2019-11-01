@@ -10,13 +10,13 @@ namespace iPhoneTools
         public static AppContext SetBackupMetadataInputPaths(this AppContext result, string inputFolder)
         {
             result.InfoPropertiesFile = Path.Combine(inputFolder, CommonConstants.InfoFileName);
-            result.Logger.LogInformation("{InfoFileName} input file path set to {InfoPropertiesFile}", CommonConstants.InfoFileName, result.InfoPropertiesFile);
+            result.Logger.LogInformation("{InfoFileName} input file path set to '{InfoPropertiesFile}'", CommonConstants.InfoFileName, result.InfoPropertiesFile);
 
             result.StatusPropertiesFile = Path.Combine(inputFolder, CommonConstants.StatusFileName);
-            result.Logger.LogInformation("{StatusFileName} input file path set to {StatusPropertiesFile}", CommonConstants.StatusFileName, result.StatusPropertiesFile);
+            result.Logger.LogInformation("{StatusFileName} input file path set to '{StatusPropertiesFile}'", CommonConstants.StatusFileName, result.StatusPropertiesFile);
 
             result.ManifestPropertiesFile = Path.Combine(inputFolder, CommonConstants.ManifestPropertiesFileName);
-            result.Logger.LogInformation("{ManifestPropertiesFileName} input file path set to {ManifestPropertiesFile}", CommonConstants.ManifestPropertiesFileName, result.ManifestPropertiesFile);
+            result.Logger.LogInformation("{ManifestPropertiesFileName} input file path set to '{ManifestPropertiesFile}'", CommonConstants.ManifestPropertiesFileName, result.ManifestPropertiesFile);
 
             return result;
         }
@@ -25,7 +25,7 @@ namespace iPhoneTools
         {
             var outputFile = Path.Combine(outputFolder, CommonConstants.InfoFileName);
 
-            result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", result.InfoPropertiesFile, outputFile);
+            result.Logger.LogInformation("Copying '{InputFile}' to '{OutputFile}'", result.InfoPropertiesFile, outputFile);
             File.Copy(result.InfoPropertiesFile, outputFile, overwrite);
 
             result.InfoPropertiesFile = outputFile;
@@ -37,7 +37,7 @@ namespace iPhoneTools
         {
             var outputFile = Path.Combine(outputFolder, CommonConstants.StatusFileName);
 
-            result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", result.StatusPropertiesFile, outputFile);
+            result.Logger.LogInformation("Copying '{InputFile}' to '{OutputFile}'", result.StatusPropertiesFile, outputFile);
             File.Copy(result.StatusPropertiesFile, outputFile, overwrite);
 
             result.StatusPropertiesFile = outputFile;
@@ -49,7 +49,7 @@ namespace iPhoneTools
         {
             var outputFile = Path.Combine(outputFolder, CommonConstants.ManifestPropertiesFileName);
 
-            result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", result.ManifestPropertiesFile, outputFile);
+            result.Logger.LogInformation("Copying '{InputFile}' to '{OutputFile}'", result.ManifestPropertiesFile, outputFile);
             File.Copy(result.ManifestPropertiesFile, outputFile, overwrite);
 
             result.ManifestPropertiesFile = outputFile;
@@ -59,17 +59,17 @@ namespace iPhoneTools
 
         public static AppContext LoadBackupMetadata(this AppContext result)
         {
-            result.Logger.LogInformation("Loading metadata from {InfoPropertiesFile}", result.InfoPropertiesFile);
+            result.Logger.LogInformation("Loading metadata from '{InfoPropertiesFile}'", result.InfoPropertiesFile);
             result = result
                 .AddInfoPropertyListFile(result.InfoPropertiesFile)
                 .AddInfoProperties();
 
-            result.Logger.LogInformation("Loading metadata from {StatusPropertiesFile}", result.StatusPropertiesFile);
+            result.Logger.LogInformation("Loading metadata from '{StatusPropertiesFile}'", result.StatusPropertiesFile);
             result = result
                 .AddStatusPropertyListFile(result.StatusPropertiesFile)
                 .AddStatusProperties();
 
-            result.Logger.LogInformation("Loading metadata from {ManifestPropertiesFile}", result.ManifestPropertiesFile);
+            result.Logger.LogInformation("Loading metadata from '{ManifestPropertiesFile}'", result.ManifestPropertiesFile);
             result = result
                 .AddManifestPropertyListFile(result.ManifestPropertiesFile)
                 .AddManifestProperties();
@@ -132,12 +132,12 @@ namespace iPhoneTools
             if (result.ManifestVersion.Major <= 9)
             {
                 result.ManifestEntriesFile = Path.Combine(inputFolder, CommonConstants.ManifestFileName_v9);
-                result.Logger.LogInformation("{ManifestFileName} input file path set to {ManifestEntriesFile}", CommonConstants.ManifestFileName_v9, result.ManifestEntriesFile);
+                result.Logger.LogInformation("{ManifestFileName} input file path set to '{ManifestEntriesFile}'", CommonConstants.ManifestFileName_v9, result.ManifestEntriesFile);
             }
             else if (result.ManifestVersion.Major == 10)
             {
                 result.ManifestEntriesFile = Path.Combine(inputFolder, CommonConstants.ManifestFileName_v10);
-                result.Logger.LogInformation("{ManifestFileName} input file path set to {ManifestEntriesFile}", CommonConstants.ManifestFileName_v10, result.ManifestEntriesFile);
+                result.Logger.LogInformation("{ManifestFileName} input file path set to '{ManifestEntriesFile}'", CommonConstants.ManifestFileName_v10, result.ManifestEntriesFile);
             }
             else
             {
@@ -154,7 +154,7 @@ namespace iPhoneTools
                 var inputFile = result.ManifestEntriesFile;
                 var outputFile = Path.Combine(outputFolder, CommonConstants.ManifestFileName_v9);
 
-                result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", inputFile, outputFile);
+                result.Logger.LogInformation("Copying '{InputFile}' to '{OutputFile}'", inputFile, outputFile);
                 File.Copy(result.ManifestEntriesFile, outputFile, overwrite);
 
                 result.ManifestEntriesFile = outputFile;
@@ -166,12 +166,12 @@ namespace iPhoneTools
 
                 if (result.ManifestProperties.IsEncrypted)
                 {
-                    result.Logger.LogInformation("Decrypting {InputFile} to {OutputFile}", inputFile, outputFile);
+                    result.Logger.LogInformation("Decrypting '{InputFile}' to '{OutputFile}'", inputFile, outputFile);
                     result.KeyStore.DecryptManifestFile(inputFile, outputFile, overwrite);
                 }
                 else
                 {
-                    result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", inputFile, outputFile);
+                    result.Logger.LogInformation("Copying '{InputFile}' to '{OutputFile}'", inputFile, outputFile);
                     File.Copy(inputFile, outputFile, overwrite);
                 }
                 result.ManifestEntriesFile = outputFile;
@@ -220,12 +220,12 @@ namespace iPhoneTools
 
                     if (result.ManifestProperties.IsEncrypted)
                     {
-                        result.Logger.LogInformation("Decrypting {InputFile} to {OutputFile}", inputFile, outputFile);
+                        result.Logger.LogInformation("Decrypting '{InputFile}' to '{OutputFile}'", inputFile, outputFile);
                         result.KeyStore.DecryptFile(inputFile, outputFile, entry.WrappedKey, entry.ProtectionClass, overwrite);
                     }
                     else
                     {
-                        result.Logger.LogInformation("Copying {InputFile} to {OutputFile}", inputFile, outputFile);
+                        result.Logger.LogInformation("Copying '{InputFile}' to '{OutputFile}'", inputFile, outputFile);
                         File.Copy(inputFile, outputFile, overwrite);
                     }
                 }

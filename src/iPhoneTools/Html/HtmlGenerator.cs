@@ -69,7 +69,7 @@ namespace iPhoneTools
         {
             var inputFile = Path.Combine("Content", fileName);
             var outputSubFolder = Path.Combine(outputFolder, "css");
-            var outputFile = Path.Combine(outputFolder, fileName);
+            var outputFile = Path.Combine(outputSubFolder, fileName);
 
             Directory.CreateDirectory(outputSubFolder);
             File.Copy(inputFile, outputFile, overwrite: true);

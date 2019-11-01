@@ -12,7 +12,7 @@ namespace iPhoneTools
         public static bool IsSupportedBinaryPropertyList(this PropertyListContext item)
         {
             return string.Equals(MagicNumber, item.MagicNumber, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(VersionNumber, item.FileFormatVersion, StringComparison.OrdinalIgnoreCase);
+                && string.Equals(VersionNumber, item.FileFormatVersion, StringComparison.Ordinal);
         }
 
         public static PropertyListContext HeaderFromBinaryReader(this PropertyListContext result, BinaryReader reader)

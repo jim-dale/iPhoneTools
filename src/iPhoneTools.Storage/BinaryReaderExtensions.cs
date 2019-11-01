@@ -96,25 +96,6 @@ namespace iPhoneTools
             return result;
         }
 
-        public static object ReadRealBigEndian(this BinaryReader item, int size)
-        {
-            object result;
-
-            switch (size)
-            {
-                case 4:
-                    result = item.ReadSingleBigEndian();
-                    break;
-                case 8:
-                    result = item.ReadDoubleBigEndian();
-                    break;
-                default:
-                    throw new InvalidDataException("Unsupported real value size");
-            }
-
-            return result;
-        }
-
         public static short ReadInt16BigEndian(this BinaryReader item)
         {
             var data = item.ReadBytes(2);

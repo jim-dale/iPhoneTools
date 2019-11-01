@@ -5,8 +5,8 @@ namespace iPhoneTools
 {
     public class BackupFileProvider
     {
-        private string _folder;
-        private Func<string, string> _func;
+        private readonly string _folder;
+        private readonly Func<string, string> _func;
 
         public BackupFileProvider(string folder, int version)
         {
@@ -22,6 +22,13 @@ namespace iPhoneTools
                     _func = Version10Provider;
                     break;
             }
+        }
+
+        public string GetPath(string domain, string relativePath)
+        {
+            var hash = CommonHelpers.Sha1HashAsHexString(domain + KnownDomains.DomainSeparator + relativePath);
+
+            return _func.Invoke(hash);
         }
 
         public string GetPath(string fileName)

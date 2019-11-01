@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
 namespace iPhoneTools
 {
@@ -16,6 +17,20 @@ namespace iPhoneTools
             }
 
             return result;
+        }
+
+        public static object LoadFrom(this XmlPropertyListReader item, string path)
+        {
+            var doc = XDocument.Load(path);
+
+            return item.ParsePropertyList(doc);
+        }
+
+        public static object Parse(this XmlPropertyListReader item, string text)
+        {
+            var doc = XDocument.Parse(text);
+
+            return item.ParsePropertyList(doc);
         }
     }
 }

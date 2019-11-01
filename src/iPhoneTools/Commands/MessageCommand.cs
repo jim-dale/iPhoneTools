@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,8 @@ namespace iPhoneTools
     {
         private readonly AppContext _appContext;
         private readonly ILogger<MessageCommand> _logger;
+
+        private BackupFileProvider _backupFileProvider;
 
         public MessageCommand(AppContext appContext, ILogger<MessageCommand> logger)
         {
@@ -24,15 +27,13 @@ namespace iPhoneTools
             var appContext = _appContext
                 .SetBackupMetadataInputPaths(opts.InputFolder)
                 .LoadBackupMetadata()
-                .SetVersionsFromMetadata()
-                .SetManifestEntriesFileInputPath(opts.InputFolder)
-                .AddManifestEntries();
+                .SetVersionsFromMetadata();
 
-            var backupFileProvider = new BackupFileProvider(opts.InputFolder, appContext.ManifestVersion.Major);
+            _backupFileProvider = new BackupFileProvider(opts.InputFolder, appContext.ManifestVersion.Major);
 
-            var input = backupFileProvider.GetPath("3d0d7e5fb2ce288813306e4d4636395e047a3d28");
+            var input = _backupFileProvider.GetPath(KnownDomains.HomeDomain, KnownFiles.Messages);
 
-            _logger.LogInformation("Opening SMS database '{Source}'", input);
+            _logger.LogInformation("Opening message database '{Source}'", input);
             using (var repository = new SmsRepository(SqliteRepository.GetConnectionString(input)))
             {
                 var items = repository.GetAllItems().ToList();
@@ -49,21 +50,7 @@ namespace iPhoneTools
                         {
                             item.Attachments = repository.GetMessageAttachments(item.Id).ToArray();
 
-                            foreach (var attachment in item.Attachments)
-                            {
-                                string fileName = attachment.FileName;
-
-                                if (string.IsNullOrEmpty(fileName) == false && fileName.StartsWith("~/"))
-                                {
-                                    string toHash = KnownDomains.MediaDomain + KnownDomains.DomainSeparator + fileName.Remove(0, 2);
-
-                                    var hash = CommonHelpers.Sha1HashAsHexString(toHash);
-
-                                    var inputFile = backupFileProvider.GetPath(hash);
-
-                                    HtmlGenerator.SaveAttachmentAs(inputFile, opts.OutputFolder, attachment.TransferName);
-                                }
-                            }
+                            SaveAttachments(item.Attachments, opts.OutputFolder);
                         }
                     }
 
@@ -80,18 +67,20 @@ namespace iPhoneTools
             return 0;
         }
 
+
         private XElement ProcessMessagesByChatIdentifier(IEnumerable<SmsMessage> items, string outputFolder)
         {
-            int i = 1;
             var chatIdentifiers = items.Select(i => i.ChatIdentifier).Distinct().OrderBy(id => id);
 
-            var parent = new XElement("ul");
+            var container = new XElement("ul");
+            var result = new XElement("div", new XAttribute("id", "menu"), container);
 
             foreach (var chatIdentifier in chatIdentifiers)
             {
-                var fileName = "Conversation-" + i + ".html";
+                var fileName = GetFileNameFromChatIdentifier(chatIdentifier);
+                fileName = "chat-" + fileName + ".html";
 
-                parent.Add(ForEachChatIdentifier(chatIdentifier, fileName));
+                container.Add(ForEachChatIdentifier(chatIdentifier, fileName));
 
                 var messages = from item in items
                                where item.ChatIdentifier.Equals(chatIdentifier)
@@ -100,14 +89,13 @@ namespace iPhoneTools
 
                 var generator = new HtmlGenerator(chatIdentifier, () =>
                 {
-                    return ProcessMessagesForChatIdentifier(messages);
+                    return ProcessMessages(messages);
                 });
 
                 generator.SaveAs(outputFolder, fileName);
-
-                ++i;
             }
-            return new XElement("div", new XAttribute("id", "menu"), parent);
+
+            return result;
         }
 
         private XElement ForEachChatIdentifier(string chatIdentifier, string fileName)
@@ -115,13 +103,12 @@ namespace iPhoneTools
             return new XElement("li", new XElement("a", new XAttribute("href", fileName), chatIdentifier));
         }
 
-        private XElement ProcessMessagesForChatIdentifier(IEnumerable<SmsMessage> items)
+        private XElement ProcessMessages(IEnumerable<SmsMessage> items)
         {
-            var chatIdentifiers = items.Select(i => i.ChatIdentifier).Distinct();
+            var container = new XElement("div", new XAttribute("class", "commentArea"));
+            var result = new XElement("div", new XAttribute("id", "menu"), container);
 
             DateTimeOffset date = default;
-            var parent = new XElement("div", new XAttribute("class", "commentArea"));
-
             foreach (var item in items)
             {
                 var diff = (date - item.Date).Duration();
@@ -129,38 +116,40 @@ namespace iPhoneTools
 
                 if (diff.TotalMinutes >= 30.0)
                 {
-                    parent.Add(new XElement("div", new XAttribute("class", "messageInfo"), item.Date.ToLocalTime().ToString("f")));
+                    container.Add(new XElement("div", new XAttribute("class", "messageInfo"), item.Date.ToLocalTime().ToString("f")));
                 }
 
-                parent.Add(ForEachMessage(item));
+                container.Add(ForEachMessage(item));
             }
-            return new XElement("div", new XAttribute("id", "menu"), parent);
+
+            return result;
         }
 
         private XElement ForEachMessage(SmsMessage item)
         {
             string side = (item.IsFromMe) ? "bubbleRight" : "bubbleLeft";
+
+            var container = new XElement("span");
+            var result = new XElement("div", new XAttribute("class", side), container);
+
             int attachmentIndex = 0;
-
-            XElement contents = new XElement("span");
-
             var lastPlaceholder = 0;
             while (lastPlaceholder <= item.Text.Length)
             {
                 var placeholder = item.Text.IndexOf(HtmlGenerator.UnicodeObjectReplacementCharacter, lastPlaceholder);
                 if (placeholder == -1)
                 {
-                    contents.Add(item.Text.Substring(lastPlaceholder));
+                    container.Add(item.Text.Substring(lastPlaceholder));
                     break;
                 }
                 var length = placeholder - lastPlaceholder;
                 if (length > 0)
                 {
-                    contents.Add(item.Text.Substring(lastPlaceholder, placeholder - lastPlaceholder));
+                    container.Add(item.Text.Substring(lastPlaceholder, placeholder - lastPlaceholder));
                 }
                 if (item.Attachments != null && attachmentIndex < item.Attachments.Length)
                 {
-                    contents.Add(ProcessAttachment(item.Attachments[attachmentIndex]));
+                    container.Add(ProcessAttachment(item.Attachments[attachmentIndex]));
                 }
                 attachmentIndex++;
                 lastPlaceholder = placeholder + 1;
@@ -169,15 +158,47 @@ namespace iPhoneTools
             {
                 for (; attachmentIndex < item.Attachments.Length; attachmentIndex++)
                 {
-                    contents.Add(ProcessAttachment(item.Attachments[attachmentIndex]));
+                    container.Add(ProcessAttachment(item.Attachments[attachmentIndex]));
                 }
             }
-            return new XElement("div", new XAttribute("class", side), contents);
+
+            return result;
+        }
+
+        private string GetFileNameFromChatIdentifier(string value)
+        {
+            var result = value;
+
+            foreach (char ch in Path.GetInvalidFileNameChars())
+            {
+                result = result.Replace(ch.ToString(), string.Empty);
+            }
+
+            return result;
+        }
+
+        private void SaveAttachments(SmsAttachment[] items, string outputFolder)
+        {
+            foreach (var item in items)
+            {
+                _logger.LogInformation("Saving attachment '{InputFileName}','{TransferName}',MIME type='{MimeType}'", item.FileName, item.TransferName, item.MimeType);
+
+                var fileName = item.FileName;
+
+                if (string.IsNullOrEmpty(fileName) == false && fileName.StartsWith("~/"))
+                {
+                    fileName = fileName.Remove(0, 2);
+                    var inputFile = _backupFileProvider.GetPath(KnownDomains.MediaDomain, fileName);
+
+                    _logger.LogInformation("Saving attachment '{InputFile}' to folder '{OutputFolder}'", inputFile, outputFolder);
+                    HtmlGenerator.SaveAttachmentAs(inputFile, outputFolder, item.TransferName);
+                }
+            }
         }
 
         private XElement ProcessAttachment(SmsAttachment item)
         {
-            _logger.LogInformation("Processing attachment {FileName}, MIME type={MimeType}", item.TransferName, item.MimeType);
+            _logger.LogInformation("Processing attachment '{FileName}',MIME type='{MimeType}'", item.TransferName, item.MimeType);
 
             XElement result;
             if (item.MimeType.StartsWith("image/"))

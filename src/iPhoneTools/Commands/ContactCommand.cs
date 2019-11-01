@@ -4,17 +4,23 @@ namespace iPhoneTools
 {
     public class ContactCommand : ICommand<ContactOptions>
     {
+        private readonly AppContext _appContext;
         private readonly ILogger<ContactCommand> _logger;
 
-        public ContactCommand(ILogger<ContactCommand> logger)
+        public ContactCommand(AppContext appContext, ILogger<ContactCommand> logger)
         {
+            _appContext = appContext;
             _logger = logger;
         }
 
         public int Run(ContactOptions opts)
         {
-            int result = default;
             _logger.LogInformation("Starting {Command}", nameof(ContactCommand));
+
+            var appContext = _appContext
+                .SetBackupMetadataInputPaths(opts.InputFolder)
+                .LoadBackupMetadata()
+                .SetVersionsFromMetadata();
 
             //    var path = Path.Combine(input, "contacts.db");
 
@@ -26,7 +32,7 @@ namespace iPhoneTools
             //    }
 
             _logger.LogInformation("Completed {Command}", nameof(ContactCommand));
-            return result;
+            return 0;
         }
     }
 }

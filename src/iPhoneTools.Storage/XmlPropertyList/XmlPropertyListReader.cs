@@ -19,24 +19,11 @@ namespace iPhoneTools
         private const string ArrayTag = "array";
         private const string DataTag = "data";
 
-        private XDocument _doc;
-
-        public object LoadFrom(string path)
+        internal object ParsePropertyList(XDocument item)
         {
-            _doc = XDocument.Load(path);
+            var dictionary = item.Element(PListTag).Element(DictionaryTag);
 
-            var dict = _doc.Element(PListTag).Element(DictionaryTag);
-
-            return ParseElement(dict);
-        }
-
-        public object Parse(string text)
-        {
-            _doc = XDocument.Parse(text);
-
-            var dict = _doc.Element(PListTag).Element(DictionaryTag);
-
-            return ParseElement(dict);
+            return ParseElement(dictionary);
         }
 
         private object ParseElement(XElement item)
@@ -48,40 +35,19 @@ namespace iPhoneTools
 
         private object ParseElement(XElement item, string typeName)
         {
-            object result;
-
-            switch (typeName)
+            object result = typeName switch
             {
-                case TrueTag:
-                    result = true;
-                    break;
-                case FalseTag:
-                    result = false;
-                    break;
-                case StringTag:
-                    result = item.Value;
-                    break;
-                case DateTag:
-                    result = ParseDate(item.Value);
-                    break;
-                case IntegerTag:
-                    result = ParseInteger(item.Value);
-                    break;
-                case RealTag:
-                    result = ParseDouble(item.Value);
-                    break;
-                case DictionaryTag:
-                    result = ParseDictionary(item);
-                    break;
-                case ArrayTag:
-                    result = ParseArray(item);
-                    break;
-                case DataTag:
-                    result = ParseData(item);
-                    break;
-                default:
-                    throw new InvalidDataException("Unknown property type " + typeName);
-            }
+                TrueTag => true,
+                FalseTag => false,
+                StringTag => item.Value,
+                DateTag => ParseDate(item.Value),
+                IntegerTag => ParseInteger(item.Value),
+                RealTag => ParseDouble(item.Value),
+                DictionaryTag => ParseDictionary(item),
+                ArrayTag => ParseArray(item),
+                DataTag => ParseData(item),
+                _ => throw new InvalidDataException("Unknown property type " + typeName),
+            };
 
             return result;
         }
@@ -90,7 +56,7 @@ namespace iPhoneTools
         {
             var result = new Dictionary<string, object>();
 
-            string key = string.Empty;
+            var key = string.Empty;
             foreach (var item in element.Elements())
             {
                 var name = item.Name.LocalName.ToLowerInvariant();

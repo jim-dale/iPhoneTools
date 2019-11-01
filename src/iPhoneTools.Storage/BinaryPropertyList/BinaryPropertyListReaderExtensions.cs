@@ -44,14 +44,14 @@ namespace iPhoneTools
 
         public static object LoadFrom(this BinaryPropertyListReader item, Stream stream)
         {
-            PropertyContext result = default;
+            object result = default;
 
             using (var reader = new BinaryReader(stream))
             {
                 result = item.LoadFrom(reader);
             }
 
-            return result.Value;
+            return result;
         }
     }
 }
