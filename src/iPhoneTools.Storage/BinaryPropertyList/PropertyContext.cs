@@ -1,10 +1,8 @@
 ﻿
 namespace iPhoneTools
 {
-    internal struct PropertyContext
+    public struct PropertyContext
     {
-        public static readonly PropertyContext Empty = new PropertyContext();
-
         public long Position { get; set; }
         public int Count { get; set; }
         public int Size { get; set; }

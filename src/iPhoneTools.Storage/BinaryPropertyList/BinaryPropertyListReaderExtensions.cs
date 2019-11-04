@@ -48,7 +48,9 @@ namespace iPhoneTools
 
             using (var reader = new BinaryReader(stream))
             {
-                result = item.LoadFrom(reader);
+                var context = item.Parse(reader);
+
+                result = context?.Root.Value;
             }
 
             return result;

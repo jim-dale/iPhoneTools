@@ -38,7 +38,6 @@ namespace iPhoneTools
                         result.ProtectionClass = protectionClass;
                         result.WrappedKey = WrappedKeyReader.Read(data);
                     }
-
                 }
             }
 

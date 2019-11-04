@@ -11,13 +11,13 @@ namespace iPhoneTools
         private const string TrueTag = "true";
         private const string FalseTag = "false";
         private const string StringTag = "string";
-        private const string DateTag = "date";
         private const string IntegerTag = "integer";
         private const string RealTag = "real";
+        private const string DateTag = "date";
+        private const string DataTag = "data";
         private const string DictionaryTag = "dict";
         private const string DictionaryKeyTag = "key";
         private const string ArrayTag = "array";
-        private const string DataTag = "data";
 
         internal object ParsePropertyList(XDocument item)
         {
@@ -40,16 +40,36 @@ namespace iPhoneTools
                 TrueTag => true,
                 FalseTag => false,
                 StringTag => item.Value,
-                DateTag => ParseDate(item.Value),
                 IntegerTag => ParseInteger(item.Value),
                 RealTag => ParseDouble(item.Value),
+                DateTag => ParseDate(item.Value),
+                DataTag => ParseData(item.Value),
                 DictionaryTag => ParseDictionary(item),
                 ArrayTag => ParseArray(item),
-                DataTag => ParseData(item),
                 _ => throw new InvalidDataException("Unknown property type " + typeName),
             };
 
             return result;
+        }
+
+        private int ParseInteger(string value)
+        {
+            return Convert.ToInt32(value, System.Globalization.NumberFormatInfo.InvariantInfo);
+        }
+
+        private double ParseDouble(string value)
+        {
+            return Convert.ToDouble(value, System.Globalization.NumberFormatInfo.InvariantInfo);
+        }
+
+        private DateTimeOffset ParseDate(string value)
+        {
+            return DateTimeOffset.Parse(value);
+        }
+
+        private byte[] ParseData(string value)
+        {
+            return Convert.FromBase64String(value);
         }
 
         private Dictionary<string, object> ParseDictionary(XElement element)
@@ -78,21 +98,6 @@ namespace iPhoneTools
             return result;
         }
 
-        private DateTimeOffset ParseDate(string value)
-        {
-            return DateTimeOffset.Parse(value);
-        }
-
-        private int ParseInteger(string value)
-        {
-            return Convert.ToInt32(value, System.Globalization.NumberFormatInfo.InvariantInfo);
-        }
-
-        private double ParseDouble(string value)
-        {
-            return Convert.ToDouble(value, System.Globalization.NumberFormatInfo.InvariantInfo);
-        }
-
         private object[] ParseArray(XElement element)
         {
             var items = new List<object>();
@@ -105,11 +110,6 @@ namespace iPhoneTools
             }
 
             return items.ToArray();
-        }
-
-        private byte[] ParseData(XElement element)
-        {
-            return Convert.FromBase64String(element.Value);
         }
     }
 }

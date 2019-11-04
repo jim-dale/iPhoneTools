@@ -1,7 +1,7 @@
 ﻿
 namespace iPhoneTools
 {
-    internal enum PropertyType
+    public enum PropertyType
     {
         Null,
         Bool,

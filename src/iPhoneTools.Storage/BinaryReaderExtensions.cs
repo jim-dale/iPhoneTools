@@ -51,48 +51,13 @@ namespace iPhoneTools
 
         public static int ReadIntBigEndian(this BinaryReader item, int size)
         {
-            int result;
-
-            switch (size)
+            var result = size switch
             {
-                case 1:
-                    result = item.ReadByte();
-                    break;
-                case 2:
-                    result = item.ReadUInt16BigEndian();
-                    break;
-                case 4:
-                    result = item.ReadInt32BigEndian();
-                    break;
-                default:
-                    throw new InvalidDataException("Unsupported integer value size");
-            }
-
-            return result;
-        }
-
-        public static long ReadLongBigEndian(this BinaryReader item, int size)
-        {
-            long result;
-
-            switch (size)
-            {
-                case 1:
-                    result = item.ReadByte();
-                    break;
-                case 2:
-                    result = item.ReadUInt16BigEndian();
-                    break;
-                case 4:
-                    result = item.ReadUInt32BigEndian();
-                    break;
-                case 8:
-                    result = item.ReadInt64BigEndian();
-                    break;
-                default:
-                    throw new InvalidDataException("Unsupported integer value size");
-            }
-
+                1 => item.ReadByte(),
+                2 => item.ReadUInt16BigEndian(),
+                4 => item.ReadInt32BigEndian(),
+                _ => throw new InvalidDataException("Unsupported integer value size"),
+            };
             return result;
         }
 

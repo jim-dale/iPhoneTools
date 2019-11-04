@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 /// <remarks>
@@ -49,15 +50,9 @@ namespace iPhoneTools
     {
         private const int MinimumViableFileSize = 40;
 
-        internal object LoadFrom(BinaryReader reader)
+        internal PropertyListContext Parse(BinaryReader reader)
         {
-            return Parse(reader).Value;
-        }
-
-
-        private PropertyContext Parse(BinaryReader reader)
-        {
-            var result = PropertyContext.Empty;
+            PropertyListContext result = default;
 
             if (reader.BaseStream.Length >= MinimumViableFileSize)
             {
@@ -69,12 +64,34 @@ namespace iPhoneTools
                     context = context.TrailerFromBinaryReader(reader)
                         .OffsetTableFromBinaryReader(reader);
 
-                    result = ParseObjectByOffsetIndex(reader, context, (int)context.TopObjectOffset);
+#if TRACE_BINARYPROPERTYLISTREADER
+                    TraceContext(context);
+#endif
+
+                    context.Root = ParseObjectByOffsetIndex(reader, context, (int)context.TopObjectOffset);
                 }
             }
 
             return result;
         }
+
+#if TRACE_BINARYPROPERTYLISTREADER
+        private void TraceContext(PropertyListContext context)
+        {
+            Trace.TraceInformation("MagicNumber:{0}", context.MagicNumber);
+            Trace.TraceInformation("FileFormatVersion:{0}", context.FileFormatVersion);
+            Trace.TraceInformation("SortVersion:{0}", context.SortVersion);
+            Trace.TraceInformation("OffsetTableOffsetSize:{0}", context.OffsetTableOffsetSize);
+            Trace.TraceInformation("ObjectRefSize:{0}", context.ObjectRefSize);
+            Trace.TraceInformation("NumObjects:{0}", context.NumObjects);
+            Trace.TraceInformation("TopObjectOffset:{0}", context.TopObjectOffset);
+            Trace.TraceInformation("OffsetTableStart:{0:x8}", context.OffsetTableStart);
+            for (int i = 0; i < context.Offsets.Length; i++)
+            {
+                Trace.TraceInformation("Offset[{0}]:{1:x8}", i, context.Offsets[i]);
+            }
+        }
+#endif
 
         private PropertyContext ParseObjectByOffsetIndex(BinaryReader reader, PropertyListContext ctx, int index)
         {
@@ -96,22 +113,26 @@ namespace iPhoneTools
             var msn = marker & 0xf0;
             var lsn = marker & 0x0f;
 
+#if TRACE_BINARYPROPERTYLISTREADER
+            Trace.TraceInformation("marker:{0:x2},msn:{1:x2},lsn:{2:x2}", marker, msn, lsn);
+#endif
+
             switch (msn)
             {
                 case 0b0000_0000:
                     switch (lsn)
                     {
                         case 0b0000_0000:
-                            result = new PropertyContext(position, 0, 1, PropertyType.Null, null);
+                            result = CreatePropertyContext(position, 0, 1, PropertyType.Null, null);
                             break;
                         case 0b0000_1000:
-                            result = new PropertyContext(position, 0, 1, PropertyType.Bool, false);
+                            result = CreatePropertyContext(position, 0, 1, PropertyType.Bool, false);
                             break;
                         case 0b0000_1001:
-                            result = new PropertyContext(position, 0, 1, PropertyType.Bool, true);
+                            result = CreatePropertyContext(position, 0, 1, PropertyType.Bool, true);
                             break;
                         case 0b0000_1111:
-                            result = new PropertyContext(position, 0, 1, PropertyType.Fill, null);
+                            result = CreatePropertyContext(position, 0, 1, PropertyType.Fill, null);
                             break;
                         default:
                             throw new InvalidDataException("Unrecognised object type " + marker.ToString("x2"));
@@ -174,11 +195,11 @@ namespace iPhoneTools
             };
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Integer, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Integer, value);
         }
 
         /// <remarks>
-        /// real    0010 nnnn...
+        /// real 0010 nnnn...
         /// # of bytes is 2^nnnn, big-endian bytes
         /// </remarks>
         private PropertyContext ReadReal(BinaryReader reader, long position, int count)
@@ -194,11 +215,11 @@ namespace iPhoneTools
             };
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Real, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Real, value);
         }
 
         /// <remarks>
-        /// date    0011 0011...
+        /// date 0011 0011...
         /// 8 byte float follows, big-endian bytes
         /// </remarks>
         private PropertyContext ReadDate(BinaryReader reader, long position, int count)
@@ -207,11 +228,11 @@ namespace iPhoneTools
             var value = CommonHelpers.ConvertFromMacTime(seconds);
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Date, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Date, value);
         }
 
         /// <remarks>
-        /// data    0100 nnnn[int]...
+        /// data 0100 nnnn[int]...
         /// nnnn is number of bytes unless 1111 then int count follows, followed by bytes
         /// </remarks>
         private PropertyContext ReadData(BinaryReader reader, long position, int count)
@@ -221,11 +242,11 @@ namespace iPhoneTools
             var value = reader.ReadBytes(count);
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Data, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Data, value);
         }
 
         /// <remarks>
-        /// string  0101 nnnn[int]...
+        /// string 0101 nnnn[int]...
         /// ASCII string, nnnn is # of chars, else 1111 then int count, then bytes
         /// </remarks>
         private PropertyContext ReadAsciiString(BinaryReader reader, long position, int count)
@@ -235,11 +256,11 @@ namespace iPhoneTools
             var value = reader.ReadAsciiString(count);
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.AsciiString, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.AsciiString, value);
         }
 
         /// <remarks>
-        /// string  0110 nnnn[int]...
+        /// string 0110 nnnn[int]...
         /// Unicode string, nnnn is # of chars, else 1111 then int count, then big-endian 2-byte uint16_t
         /// </remarks>
         private PropertyContext ReadUnicodeString(BinaryReader reader, long position, int count)
@@ -250,11 +271,11 @@ namespace iPhoneTools
             var value = reader.ReadUnicodeStringBigEndian(size);
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.UnicodeString, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.UnicodeString, value);
         }
 
         /// <remarks>
-        /// uid    1000 nnnn...
+        /// uid 1000 nnnn...
         /// nnnn+1 is # of bytes
         /// </remarks>
         private PropertyContext ReadUid(BinaryReader reader, long position, int count)
@@ -262,14 +283,21 @@ namespace iPhoneTools
             count = ReadObjectSize(reader, count);
 
             int size = count + 1;
-            var value = reader.ReadLongBigEndian(size);
+            object value = size switch
+            {
+                1 => reader.ReadByte(),
+                2 => reader.ReadUInt16BigEndian(),
+                4 => reader.ReadUInt32BigEndian(),
+                8 => reader.ReadUInt64BigEndian(),
+                _ => throw new InvalidDataException("Unsupported UID value size"),
+            };
             int totalSize = reader.GetOffsetFromCurrentPosition(position);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Uid, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Uid, value);
         }
 
         /// <remarks>
-        /// array   1010 nnnn[int], objref *
+        /// array 1010 nnnn[int], objref *
         /// nnnn is count, unless '1111', then int count follows
         /// </remarks>
         private PropertyContext ReadArray(BinaryReader reader, PropertyListContext ctx, long position, int count)
@@ -281,7 +309,7 @@ namespace iPhoneTools
 
             var value = ParseArrayCore(reader, ctx, count, valueRefs);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Array, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Array, value);
         }
 
         /// <remarks>
@@ -297,11 +325,11 @@ namespace iPhoneTools
 
             var value = ParseArrayCore(reader, ctx, count, valueRefs);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Set, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Set, value);
         }
 
         /// <remarks>
-        /// dict    1101 nnnn[int],keyref*,objref*
+        /// dict 1101 nnnn[int],keyref*,objref*
         /// nnnn is count, unless '1111', then int count follows
         /// </remarks>
         private PropertyContext ReadDictionary(BinaryReader reader, PropertyListContext ctx, long position, int count)
@@ -314,7 +342,7 @@ namespace iPhoneTools
 
             var value = ParseDictionaryCore(reader, ctx, count, keyRefs, valueRefs);
 
-            return new PropertyContext(position, count, totalSize, PropertyType.Dictionary, value);
+            return CreatePropertyContext(position, count, totalSize, PropertyType.Dictionary, value);
         }
 
         private int ReadObjectSize(BinaryReader reader, int size)
@@ -372,6 +400,17 @@ namespace iPhoneTools
 
                 result.Add(key, value);
             }
+
+            return result;
+        }
+
+        private PropertyContext CreatePropertyContext(long position, int count, int size, PropertyType type, object value)
+        {
+#if TRACE_BINARYPROPERTYLISTREADER
+            Trace.TraceInformation("position:{0:x4},type:{1},value:{2}", position, type, value);
+#endif
+
+            var result = new PropertyContext(position, count, size, type, value);
 
             return result;
         }
