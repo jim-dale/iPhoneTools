@@ -181,17 +181,19 @@ namespace iPhoneTools
         {
             foreach (var item in items)
             {
-                _logger.LogInformation("Saving attachment '{InputFileName}','{TransferName}',MIME type='{MimeType}'", item.FileName, item.TransferName, item.MimeType);
-
-                var fileName = item.FileName;
-
-                if (string.IsNullOrEmpty(fileName) == false && fileName.StartsWith("~/"))
+                if (string.IsNullOrEmpty(item.FileName) == false)
                 {
-                    fileName = fileName.Remove(0, 2);
+                    _logger.LogInformation("Saving attachment '{InputFileName}','{TransferName}',MIME type='{MimeType}'", item.FileName, item.TransferName, item.MimeType);
+
+                    var fileName = item.FileName.RemovePrefix("~/");
                     var inputFile = _backupFileProvider.GetPath(KnownDomains.MediaDomain, fileName);
 
                     _logger.LogInformation("Saving attachment '{InputFile}' to folder '{OutputFolder}'", inputFile, outputFolder);
                     HtmlGenerator.SaveAttachmentAs(inputFile, outputFolder, item.TransferName);
+                }
+                else
+                {
+                    _logger.LogWarning("Missing file name for attachment with Id={Id}", item.Id);
                 }
             }
         }

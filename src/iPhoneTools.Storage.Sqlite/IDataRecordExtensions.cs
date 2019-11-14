@@ -25,7 +25,7 @@ namespace iPhoneTools
             return Guid.Parse(value.Substring(0, 36));
         }
 
-        public static DateTimeOffset GetDateTimeOffsetFromMacTime(this IDataRecord item, int index)
+        public static DateTimeOffset GetDateTimeOffsetFromLongMacTime(this IDataRecord item, int index)
         {
             DateTimeOffset result = default;
 
@@ -33,6 +33,20 @@ namespace iPhoneTools
             if ((value is DBNull) == false)
             {
                 result = CommonHelpers.ConvertFromMacTime((long)value);
+            }
+
+            return result;
+        }
+
+        public static DateTimeOffset GetDateTimeOffsetFromStringMacTime(this IDataRecord item, int index)
+        {
+            DateTimeOffset result = default;
+
+            var value = item.GetValueOrDefault<string>(index);
+            if (string.IsNullOrEmpty(value) == false)
+            {
+                double parsedValue = double.Parse(value);
+                result = CommonHelpers.ConvertFromMacTime(parsedValue);
             }
 
             return result;

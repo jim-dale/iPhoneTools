@@ -38,7 +38,7 @@ namespace iPhoneTools
                         Guid = reader.GetGuidAtStartOfString(2),
                         Text = reader.GetValueOrDefault<string>(3),
                         Service = reader.GetValueOrDefault<string>(4),
-                        Date = reader.GetDateTimeOffsetFromMacTime(5),
+                        Date = reader.GetDateTimeOffsetFromLongMacTime(5),
                         IsFromMe = reader.GetBoolean(6),
                         CacheHasAttachments = reader.GetBoolean(7),
                     };

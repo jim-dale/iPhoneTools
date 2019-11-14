@@ -56,19 +56,19 @@ namespace iPhoneTools
 
             if (reader.BaseStream.Length >= MinimumViableFileSize)
             {
-                var context = new PropertyListContext()
+                result = new PropertyListContext()
                     .HeaderFromBinaryReader(reader);
 
-                if (context.IsSupportedBinaryPropertyList())
+                if (result.IsSupportedBinaryPropertyList())
                 {
-                    context = context.TrailerFromBinaryReader(reader)
+                    result = result.TrailerFromBinaryReader(reader)
                         .OffsetTableFromBinaryReader(reader);
 
 #if TRACE_BINARYPROPERTYLISTREADER
-                    TraceContext(context);
+                    TraceContext(result);
 #endif
 
-                    context.Root = ParseObjectByOffsetIndex(reader, context, (int)context.TopObjectOffset);
+                    result.Root = ParseObjectByOffsetIndex(reader, result, (int)result.TopObjectOffset);
                 }
             }
 

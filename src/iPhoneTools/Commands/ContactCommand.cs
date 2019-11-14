@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace iPhoneTools
 {
@@ -6,6 +9,8 @@ namespace iPhoneTools
     {
         private readonly AppContext _appContext;
         private readonly ILogger<ContactCommand> _logger;
+
+        private BackupFileProvider _backupFileProvider;
 
         public ContactCommand(AppContext appContext, ILogger<ContactCommand> logger)
         {
@@ -22,14 +27,23 @@ namespace iPhoneTools
                 .LoadBackupMetadata()
                 .SetVersionsFromMetadata();
 
-            //    var path = Path.Combine(input, "contacts.db");
+            _backupFileProvider = new BackupFileProvider(opts.InputFolder, appContext.ManifestVersion.Major);
 
-            //    List<ContactDbEntry> items = default;
+            var input = _backupFileProvider.GetPath(KnownDomains.HomeDomain, KnownFiles.AddressBook);
 
-            //    using (var repository = new ContactRepository(SqliteRepository.GetConnectionString(path)))
-            //    {
-            //        items = repository.GetAllItems().ToList();
-            //    }
+            List<ContactDbEntry> items = default;
+
+            _logger.LogInformation("Opening contacts database '{Source}'", input);
+            using (var repository = new ContactRepository(SqliteRepository.GetConnectionString(input)))
+            {
+                items = repository.GetAllItems().ToList();
+
+                foreach (var item in items)
+                {
+                    ContactAsVCard.Save(item);
+                    //break;
+                }
+            }
 
             _logger.LogInformation("Completed {Command}", nameof(ContactCommand));
             return 0;

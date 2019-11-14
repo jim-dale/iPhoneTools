@@ -11,6 +11,7 @@ namespace iPhoneTools
             using (var host = AppHost.CreateDefaultBuilder().ConfigureServices((hostContext, services) =>
             {
                 services.AddTransient<ICommand<DecryptOptions>, DecryptCommand>();
+                services.AddTransient<ICommand<ManifestOptions>, ManifestCommand>();
                 services.AddTransient<ICommand<MessageOptions>, MessageCommand>();
                 services.AddTransient<ICommand<ContactOptions>, ContactCommand>();
                 services.AddTransient<KeyStore>();
@@ -18,9 +19,10 @@ namespace iPhoneTools
                 services.AddTransient<AppContext>();
             }).Build())
             {
-                result = Parser.Default.ParseArguments<DecryptOptions, MessageOptions, ContactOptions>(args)
+                result = Parser.Default.ParseArguments<DecryptOptions, ManifestOptions, MessageOptions, ContactOptions>(args)
                     .MapResult(
                         (DecryptOptions opts) => AppHost.RunCommand(host.Services, opts),
+                        (ManifestOptions opts) => AppHost.RunCommand(host.Services, opts),
                         (MessageOptions opts) => AppHost.RunCommand(host.Services, opts),
                         (ContactOptions opts) => AppHost.RunCommand(host.Services, opts),
                         errs => 1);
